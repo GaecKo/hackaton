@@ -1,7 +1,9 @@
 import pandas as pd
-from scipy.stats import gamma
+from scipy.stats import gamma, norm
 import numpy as np
 import matplotlib.pyplot as plt
+
+
 
 # ===== Load CSV & convert dates ===== #
 
@@ -19,8 +21,8 @@ april_caen = []
 april_tours = []
 
 for index in dates_avril.index:
-    april_caen.append(caen_data[index])
-    april_tours.append(tours_data[index])
+    april_caen.append(caen_data[index]* 24 * 0.18 * 0.75)
+    april_tours.append(tours_data[index]* 24 * 0.18 * 0.75)
 
 #print(april_tours)
 
@@ -33,9 +35,7 @@ gamma_params_caen = gamma.fit(april_caen, floc= -0.001)
 print(gamma_params_caen)
 
 # Fit Normal distribution
-mean_caen = np.mean(april_caen)
-std_caen = np.std(april_caen)
-normal_params_caen = (mean_caen, std_caen)
+normal_params_caen = norm.fit(april_caen)
 print(normal_params_caen)
 
 # ===== Tours ===== #
@@ -44,9 +44,7 @@ gamma_params_tours = gamma.fit(april_tours, floc= -0.001)
 print(gamma_params_tours)
 
 # Fit Normal distribution
-mean_tours = np.mean(april_tours)
-std_tours = np.std(april_tours)
-normal_params_tours = (mean_tours, std_tours)
+normal_params_tours = norm.fit(april_tours)
 print(normal_params_tours)
 
 ## 2) Compute the 4 log-likelihoods and select the best model for each location (justify your answer).
@@ -58,7 +56,7 @@ log_likelihood_gamma_caen = gamma.logpdf(april_caen, *gamma_params_caen).sum()
 print(log_likelihood_gamma_caen)
 
 # Normal
-log_likelihood_normal_caen = gamma.logpdf(april_caen, *normal_params_caen).sum()
+log_likelihood_normal_caen = norm.logpdf(april_caen, *normal_params_caen).sum()
 print(log_likelihood_normal_caen)
 
 # ===== Tours ===== #
@@ -67,8 +65,16 @@ log_likelihood_gamma_tours = gamma.logpdf(april_tours, *gamma_params_tours).sum(
 print(log_likelihood_gamma_tours)
 
 # Normal
-log_likelihood_normal_tours = gamma.logpdf(april_tours, *normal_params_tours).sum()
+log_likelihood_normal_tours = norm.logpdf(april_tours, *normal_params_tours).sum()
 print(log_likelihood_normal_tours)
+
+# Compare and select the best model
+best_model_caen = "Gamma" if log_likelihood_gamma_caen > log_likelihood_normal_caen else "Normal"
+best_model_tours = "Gamma" if log_likelihood_gamma_tours > log_likelihood_normal_tours else "Normal"
+
+# Print and justify the best models
+print(f"Best model for Caen: {best_model_caen} (Log-Likelihood: {log_likelihood_gamma_caen if best_model_caen == 'Gamma' else log_likelihood_normal_caen})")
+print(f"Best model for Tours: {best_model_tours} (Log-Likelihood: {log_likelihood_gamma_tours if best_model_tours == 'Gamma' else log_likelihood_normal_tours})")
 
 
 ## 3) Compare on the same plot the empirical, the gamma and normal pdf (the empirical pdf is an histogram of frequencies)
@@ -80,7 +86,7 @@ gamma_y_caen = gamma.pdf(gamma_x_caen, *gamma_params_caen)
 
 # Normal
 normal_x_caen = np.linspace(0, 1000, 1000)
-normal_y_caen = gamma.pdf(normal_x_caen, *normal_params_caen)
+normal_y_caen = norm.pdf(normal_x_caen, *normal_params_caen)
 
 # ===== Tours ===== #
 # Gamma
@@ -89,7 +95,7 @@ gamma_y_tours = gamma.pdf(gamma_x_tours, *gamma_params_tours)
 
 # Normal
 normal_x_tours = np.linspace(0, 1000, 1000)
-normal_y_tours = gamma.pdf(normal_x_tours, *normal_params_tours)
+normal_y_tours = norm.pdf(normal_x_tours, *normal_params_tours)
 
 # ===== Plot ===== #
 
