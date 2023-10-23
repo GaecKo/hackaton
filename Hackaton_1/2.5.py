@@ -1,8 +1,6 @@
 import pandas as pd
 import scipy.stats as sc
 from scipy import stats
-import numpy as np
-
 
 # ===== Load CSV & convert dates ===== #
 
@@ -28,12 +26,10 @@ daily_avg_caen_energy = daily_avg_caen.apply(lambda x: x*24*0.18*0.75).tolist()
 daily_avg_tours_energy = daily_avg_tours.apply(lambda x: x*24*0.18*0.75).tolist()
 
 
-
-mu_stat, p_value = stats.ttest_ind(daily_avg_caen_energy, daily_avg_tours_energy)
+wilcoxon_stat, p_value = stats.wilcoxon(daily_avg_caen_energy, daily_avg_tours_energy)
 
 alpha = 0.05 # We can change this value depending on what we want 
 if p_value > alpha:
-    print(f"H_0 non rejettée. La p_valeur {p_value} est plus grande que notre alpha ({alpha}).")
+    print(f"H_0 non rejettée. La p_valeur {p_value} est plus grande que notre alpha ({alpha}). La production quotidienne des deux villes n'a donc pas de différences significatives.")
 else:
-    print(f"H_0 rejettée. La p_valeur {p_value} est plus petite que notre alpha ({alpha}).")
-
+    print(f"H_0 rejettée. La p_valeur {p_value} est plus petite que notre alpha ({alpha}). Il y a donc une trop grosse différence entre la production des 2 villes.")
