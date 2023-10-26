@@ -1,16 +1,56 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import math
 from scipy.stats import gamma, norm
 import numpy as np
-import matplotlib.pyplot as plt
 
 
-
-# ===== Load CSV & convert dates ===== #
-
+# ===== Load CSV & convert dates =====
 df = pd.read_csv('Radiation.csv')
 
-dates = pd.to_datetime(df['DATE'], format='%Y%m%d')
+data = pd.read_csv('Radiation.csv')
+
+data['DATE'] = pd.to_datetime(data['DATE'], format="%Y%m%d")
+
+# Apply formula: C = E_Sol x 24 x P_cr x f_perf for both cities data
+data['Caen'] = data['Caen']*24*0.18*0.75
+data['Tours'] = data['Tours']*24*0.18*0.75
+
+
+# parsing data to keep 1 line out of 100 (better visibility, less precision)
+clean_data = data.iloc[range(0, len(data), 100), :]  
+
+# C
+
+# parsing data to keep 1 line out of 100 (better visibility, less precision)
+clean_data = data.iloc[range(0, len(data), 100), :]  
+# Donnée abérante de Caean
+DataC = data.sort_values(by="Caen", axis=0)
+Q1C = data["Caen"].quantile(0.25)
+Q3C = data["Caen"].quantile(0.75)
+MaxC = Q3C + 1.5 * (Q3C - Q1C)
+MinC = Q1C - 1.5 * (Q3C - Q1C)
+
+# Donnée abérante de Tours
+DataT = data.sort_values(by="Tours", axis=0)
+Q1T = data["Tours"].quantile(0.25)
+Q3T = data["Tours"].quantile(0.75)
+MaxT = Q3T + 1.5 * (Q3T - Q1T)
+MinT = Q1T - 1.5 * (Q3T - Q1T)
+
+# Variable avec données filtrées
+DataParse = data[(DataC["Caen"] >= MinC) & (DataC["Caen"] <= MaxC) & (DataT["Tours"] >= MinT) & (DataT["Tours"] <= MaxT)]
+#print(type(DataParse.values[0][1]))
+#print(DataParse['DATE'])
+
+
+
+
+
+dates = pd.to_datetime(DataParse['DATE'], format='%Y%m%d')
 dates_avril = dates[dates.dt.month == 4]
+#print(dates_avril)
 
 # ===== Caen/Tours data ===== #
 caen_data = df['Caen']
@@ -116,4 +156,3 @@ plt.plot(normal_x_tours, normal_y_tours, label='Normal')
 plt.legend()
 plt.title('Tours')
 plt.show()
-
