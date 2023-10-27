@@ -22,13 +22,23 @@ validation_set = v_set[['YEAR', 'Caen']]
 model = AutoReg(training_set['Caen'], lags=10)
 result = model.fit()
 
-print(result.summary())
+#print(result.summary())
 
 #3. judge quality
 
 actual_data = training_set['Caen']
 calculated_data = result.predict()
 
+# ===== Check for NaN values ===== #
+
+actual_data_nan = actual_data.isnull().any()
+calc_data_nan = calculated_data.isnull().any()
+
+# ===== Remove the missing values and make the sets the same size ===== #
+
+missing_rows = actual_data.isnull() | calculated_data.isnull()
+actual_data = actual_data[~missing_rows]
+calculated_data = calculated_data[~missing_rows]
 
 plt.plot(training_set['YEAR'], actual_data/10, label="Measured Temp.", linestyle="-", color="blue")
 plt.plot(training_set['YEAR'], calculated_data.values/10, label="Predicted Temp.", linestyle="--", color="red")
@@ -37,7 +47,7 @@ plt.title("Measured temperature and predicted temperature by AutoReg model")
 plt.xlabel("Date")
 plt.ylabel("Temperature (celsius)")
 plt.legend()
-plt.show()
+#plt.show()
 
 #4. compute the Mean Absolute error (MAE) on the training set
 
@@ -58,6 +68,17 @@ result2 = model.fit()
 actual_data1 = validation_set['Caen']
 calculated_data1 = result2.predict()
 
+# ===== Check for NaN values ===== #
+
+actual_data_1nan = actual_data1.isnull().any()
+calc_data_1nan = calculated_data1.isnull().any()
+
+# ===== Remove the missing values and make the sets the same size ===== #
+
+if actual_data_1nan | calc_data_1nan:
+    missing_rows = actual_data1.isnull() | calculated_data1.isnull()
+    actual_data1 = actual_data1[~missing_rows]
+    calculated_data1 = calculated_data1[~missing_rows]
 
 plt.plot(validation_set['YEAR'], actual_data1/10, label="Measured Temp.", linestyle="-", color="blue")
 plt.plot(validation_set['YEAR'], calculated_data1.values/10, label="Predicted Temp.", linestyle="--", color="red")
