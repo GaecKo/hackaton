@@ -22,12 +22,14 @@ validation_set = v_set[['YEAR', 'Caen']]
 model = AutoReg(training_set['Caen'], lags=10)
 result = model.fit()
 
-#print(result.summary())
+print(result.summary())
 
 #3. judge quality
 
 actual_data = training_set['Caen']
 calculated_data = result.predict()
+
+print("Based on the values we can see that the model is stable, but the AIC tells us that it could be improved")
 
 # ===== Check for NaN values ===== #
 
@@ -36,18 +38,10 @@ calc_data_nan = calculated_data.isnull().any()
 
 # ===== Remove the missing values and make the sets the same size ===== #
 
-missing_rows = actual_data.isnull() | calculated_data.isnull()
-actual_data = actual_data[~missing_rows]
-calculated_data = calculated_data[~missing_rows]
-
-plt.plot(training_set['YEAR'], actual_data/10, label="Measured Temp.", linestyle="-", color="blue")
-plt.plot(training_set['YEAR'], calculated_data.values/10, label="Predicted Temp.", linestyle="--", color="red")
-
-plt.title("Measured temperature and predicted temperature by AutoReg model")
-plt.xlabel("Date")
-plt.ylabel("Temperature (celsius)")
-plt.legend()
-#plt.show()
+if actual_data_nan | calc_data_nan:
+    missing_rows = actual_data.isnull() | calculated_data.isnull()
+    actual_data = actual_data[~missing_rows]
+    calculated_data = calculated_data[~missing_rows]
 
 #4. compute the Mean Absolute error (MAE) on the training set
 
@@ -56,6 +50,7 @@ plt.legend()
 MAE = mae(actual_data, calculated_data)
 
 print("The Mean Absolute Error between predicted and real consumptions on the training set is: {} W/m²".format(MAE))
+
 
 #3.3
 
@@ -68,17 +63,9 @@ result2 = model.fit()
 actual_data1 = validation_set['Caen']
 calculated_data1 = result2.predict()
 
-# ===== Check for NaN values ===== #
-
-actual_data_1nan = actual_data1.isnull().any()
-calc_data_1nan = calculated_data1.isnull().any()
-
-# ===== Remove the missing values and make the sets the same size ===== #
-
-if actual_data_1nan | calc_data_1nan:
-    missing_rows = actual_data1.isnull() | calculated_data1.isnull()
-    actual_data1 = actual_data1[~missing_rows]
-    calculated_data1 = calculated_data1[~missing_rows]
+min_length = min(len(actual_data1), len(calculated_data1))
+actual_data1 = actual_data1[:min_length]
+calculated_data1 = calculated_data1[:min_length]
 
 plt.plot(validation_set['YEAR'], actual_data1/10, label="Measured Temp.", linestyle="-", color="blue")
 plt.plot(validation_set['YEAR'], calculated_data1.values/10, label="Predicted Temp.", linestyle="--", color="red")
@@ -92,8 +79,11 @@ plt.show()
 #Plot the errors of prediction. Are they acceptable?
 
 prediction_error = actual_data1 - calculated_data1
+
+prediction_error = prediction_error[:len(validation_set['YEAR'])]
+
 plt.figure(figsize=(12,12))
-plt.plot(validation_set['YEAR'], prediction_error, label="Prediction errors", color="green")
+plt.plot(validation_set['YEAR'], prediction_error, label="Prediction errors", color="red")
 plt.title("Prediction Errors on the validation set")
 plt.xlabel("Date")
 plt.ylabel("Error")
@@ -106,3 +96,4 @@ mae2 = mae(actual_data1, calculated_data1)
 r_squared_val = r2_score(actual_data1, calculated_data1)
 
 print("The MAE and the R² values are respectively: {} and {}".format(mae2, r_squared_val))
+print("The model makes good points predictions but overall has trouble understanding the variations of the data")
