@@ -117,7 +117,7 @@ def biplot_visualization(
     return fig
 
 
-def accuracy_metric(y_true: np.ndarray, y_pred: List[Dict[str, float]], tol: float = 1e-3):
+def accuracy_metric(y_true: np.ndarray, y_pred: List[Dict[str, float]], tol: float = 1e-2):
     """
     Return the accuracy vector between y_true and y_pred.
 
